@@ -10,6 +10,9 @@ BusterNet - https://github.com/isi-vista/BusterNet
 The white regions in the prediction are tampered areas.
 
 Environment - 
-Puthon - 3.6
+
+Python - 3.6
+
 Tensorflow 1.15
+
 Keras 2.2
