@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">-->
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <style>
+        * {
+        box-sizing: border-box;
+        }
+
+        body {
+        font-size: 14px;
+        background: #ede7f6;
+        text-align: center;
+        font-family: 'Ubuntu', sans-serif;
+        }
+
+        .file-input {
+        display: inline-block;
+        text-align: left;
+        background: #fff;
+        padding: 10px;
+        width: 450px;
+        position: relative;
+        border-radius: 3px;
+        margin-top: 4vh;
+        height: 50px;
+        }
+
+        .file-input > [type='file'] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        z-index: 10;
+        cursor: pointer;
+        }
+
+        .file-input > .button {
+        display: inline-block;
+        cursor: pointer;
+        background: #eee;
+        padding: 8px 16px;
+        border-radius: 2px;
+        margin-right: 8px;
+        }
+
+        .file-input:hover > .button {
+        background: dodgerblue;
+        color: white;
+        }
+
+        .file-input > .label {
+        color: #333;
+        white-space: nowrap;
+        opacity: .8;
+        }
+
+        .file-input.-chosen > .label {
+        opacity: 1;
+        }
+        /* Center the loader */
+        #loader {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: 1;
+            width: 150px;
+            height: 150px;
+            margin: -75px 0 0 -75px;
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+            display: none;
+        }
+
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Add animation to "page content" */
+        .animate-bottom {
+            position: relative;
+            -webkit-animation-name: animatebottom;
+            -webkit-animation-duration: 1s;
+            animation-name: animatebottom;
+            animation-duration: 1s
+        }
+
+        @-webkit-keyframes animatebottom {
+            from { bottom:-100px; opacity:0 } 
+            to { bottom:0px; opacity:1 }
+        }
+
+        @keyframes animatebottom { 
+            from{ bottom:-100px; opacity:0 } 
+            to{ bottom:0; opacity:1 }
+        }
+
+        #imgOut {
+            display: none;
+            text-align: center;
+        }
+
+        .container {
+            height: 100%;
+            width: 85%;
+            display: flex;
+            margin: 0 auto;
+            margin-top: 50px;
+        }
+        #imgIn {
+            padding: 0;
+            overflow: hidden;
+            display:inline-block;
+        }
+        #imgOut {
+            padding: 0;
+            overflow: hidden;
+            display:inline-block;
+        }
+        #imgOut2 {
+            padding: 0;
+            overflow: hidden;
+            display:inline-block;
+        }
+        #rightThing {
+            vertical-align: middle;
+            display: table-cell;
+            text-align: center;
+            padding-top: 85px;
+            font-size: 120%;
+        }
+        #predict-button{
+            height: 50px;
+            margin-left: 5px;
+            border-radius: 4px;
+            background-color: #c0b3c2;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .card {
+        /* Add shadows to create the "card" effect */
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+        }
+
+        /* On mouse-over, add a deeper shadow */
+        .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+        }
+
+        /* Add some padding inside the card container */
+        .container {
+        padding: 2px 16px;
+        }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script type='text/javascript'>
+    
+        var srcData;
+        function encodeImageFileAsURL() {
+            var filesSelected = document.getElementById("inputFileToLoad").files;
+            if (filesSelected.length > 0) {
+                var fileToLoad = filesSelected[0];
+                console.log(fileToLoad);
+                document.querySelector(".label").innerText = fileToLoad.name;
+                var fileReader = new FileReader();
+
+                fileReader.onload = function(fileLoadedEvent) {
+                    srcData = fileLoadedEvent.target.result; // <--- data: base64
+
+                    var newImage = document.createElement('img');
+                    newImage.src = srcData;
+                    newImage.width = newImage.height = "250";
+                    document.getElementById("imgIn").innerHTML = newImage.outerHTML;
+                    document.getElementById("in_label").innerText = "Input Image";
+                }
+                fileReader.readAsDataURL(fileToLoad);
+            }
+        }
+
+        $( document ).ready(function() {
+            $("#predict-button").click(function(){
+                document.getElementById("loader").style.display = "block";
+
+                let message = {
+                    image: srcData
+                }
+                console.log(message);
+                $.post("http://127.0.0.1:5000/predict", JSON.stringify(message), function(response){
+                    image_b64_man = "data:image/png;base64,".concat(response['mask']);
+                    image_b64_bus = "data:image/png;base64,".concat(response['buster_mask']);
+                    
+                    var newImage = document.createElement('img');
+                    newImage.src = image_b64_man;
+                    newImage.width = newImage.height = "250";
+                    document.querySelector('#imgOut').innerHTML = newImage.outerHTML;
+                    document.getElementById("out_label").innerText = "ManTraNet Prediction";
+
+                    var newImage2 = document.createElement('img');
+                    newImage2.src = image_b64_bus;
+                    newImage2.width = newImage2.height = "250";
+                    document.querySelector('#imgOut2').innerHTML = newImage2.outerHTML;
+                    document.getElementById("out_label2").innerText = "BusterNet Prediction";
+
+                    document.getElementById("rightThing").innerHTML = "Time Taken <br> <br>" + "ManTraNet : " + response['ptime'] + " seconds." + "<br>" +  "BusterNet : " + response['btime'] + " seconds.";
+
+                    document.getElementById("loader").style.display = "none";
+                    document.getElementById("imgOut").style.display = "inline";
+                    document.getElementById("imgOut2").style.display = "inline";
+                });
+            }); 
+        });
+          
+    </script>
+</head>
+<body>
+    <h2 style="font-family: 'Roboto Mono', monospace; font-size:300%;">Check Image Authenticity</h2>
+    <div class='file-input card'>
+        <input type='file' id="inputFileToLoad" onchange="encodeImageFileAsURL()">
+        <span class='button'>Choose</span>
+        <span class='label' data-js-label>No file selected</label>
+        
+    </div>
+    <button id="predict-button" style="font-family: 'Montserrat', sans-serif;">PREDICT</button>
+                
+    <div class="container" >
+        <div id="imgIn" class="card"></div>
+        <div style="width:30px;"></div>
+        <div id="imgOut" class="card"></div>
+        <div style="width:30px;"></div>
+        <div id="imgOut2" class="card"></div>
+        <div style="width:30px;"></div>
+        <div id="rightThing">
+        </div>
+    </div>
+    <div class="container" style="margin-top:-10px;" >
+        <h3 id="in_label" style="margin-left:55px;"></h3>
+        <div style="width:30px;margin-right:55px;"></div>
+        <div class="card"></div>
+        <h3 id="out_label" style="padding-left:85px;"></h3>
+        <div style="width:30px;margin-right:80px;"></div>
+        <h3 id="out_label2" style="padding-left:16px;"></h3>
+        <div style="width:30px;margin-right:80px;"></div>
+        <div>  
+        </div>
+    </div>
+        
+    <div id="loader"></div>
+    <!-- <img src="https://image.shutterstock.com/image-vector/smiley-vector-happy-face-260nw-408014413.jpg" alt="Smiley face" height="250" width="250"> -->
+</body>
+</html>
